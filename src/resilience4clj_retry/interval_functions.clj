@@ -1,4 +1,4 @@
-(ns resilience4clj-retry.interval-function
+(ns resilience4clj-retry.interval-functions
   (:import
    (io.github.resilience4j.retry IntervalFunction)))
 

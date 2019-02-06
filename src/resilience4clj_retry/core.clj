@@ -27,14 +27,14 @@
   [{:keys [max-attempts wait-duration interval-function]}]
   (.build
    (cond-> (RetryConfig/custom)
-     max-attempts  (.maxAttempts max-attempts)
-     wait-duration (.waitDuration (Duration/ofMillis wait-duration))
+     max-attempts      (.maxAttempts max-attempts)
+     wait-duration     (.waitDuration (Duration/ofMillis wait-duration))
      interval-function (.intervalFunction interval-function))))
 
-;; FIXME: retry config does not expose wait duration directly - this is wrong
+;; FIXME: retry config does not expose wait duration directly - this feels wrong
 (defn ^:private retry-config->config-data
   [retry-config]
-  {:max-attempts  (.getMaxAttempts retry-config)
+  {:max-attempts      (.getMaxAttempts retry-config)
    :interval-function (.getIntervalFunction retry-config)})
 
 (defmulti ^:private event->data
@@ -71,7 +71,6 @@
 (defn ^:private event-consumer [f]
   (reify EventConsumer
     (consumeEvent [this e]
-      (println "event-consumer being called")
       (let [data (event->data e)]
         (f data)))))
 
@@ -131,10 +130,10 @@
   (let [event-publisher (.getEventPublisher retry)
         consumer (event-consumer f)]
     (case event-key
-      :success (.onSuccess event-publisher consumer)
-      :error (.onError event-publisher consumer)
-      :ignored-error (.onIgnoredError event-publisher consumer)
-      :retry (.onRetry event-publisher consumer))))
+      :SUCCESS (.onSuccess event-publisher consumer)
+      :ERROR (.onError event-publisher consumer)
+      :IGNORED_ERROR (.onIgnoredError event-publisher consumer)
+      :RETRY (.onRetry event-publisher consumer))))
 
 (comment
   (def retry (create "my-retry"))
@@ -190,12 +189,8 @@
             (catch Throwable t)))
   (metrics retry2)
 
+  (let [r (proxy [io.github.resilience4j.retry RetryConfig] []
+            (new-method []
+              (println "Here")))])
 
-  #_(.apply (:wait-duration (config retry))
-            (int 1))
-
-
-  (.apply (reify java.util.function.Function
-            (apply [this x]
-              (str "Hello " x)))
-          "World"))
+  )
