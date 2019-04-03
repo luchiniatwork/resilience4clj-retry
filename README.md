@@ -72,79 +72,94 @@ Then create a retry calling the function `create`:
 Now you can decorate any function you have with the retry you just
 defined.
 
-For the sake of this example, let's create a function that takes 250ms
-to return:
-
-TBD:
+For the sake of this example, we will need to use a contrived
+approach. In real life you probably have a function that calls an API
+via a GET HTTP and, due to its network-based nature, this function
+sometimes fails. In our contrived example we will use a function that
+returns a function that _we know_ will fail for a certain amount of
+times and it will start working:
 
 ``` clojure
-(defn slow-hello []
-  (Thread/sleep 250)
-  "Hello World!")
+(defn ^:private create-hello-works-after
+  [x]
+  (let [a (atom x)]
+    (fn [n]
+      (swap! a dec)
+      (if (< @a 0)
+        (str "Hello " n "!")
+        (throw (ex-info "Couldn't say hello"
+                        {:extra-info :here}))))))
 ```
 
-The function `decorate` will take the slow function just above and the
-time limiter you created and return a time limited function:
+You can use this function like this:
 
 ``` clojure
-(def limited-hello (tl/decorate slow-hello limiter))
+(def hello-world (create-hello-works-after 2))
 ```
 
-When you call `limited-hello`, it should eval to `"Hello World!"`
-after 250ms:
+Then you can call `(hello-world "John")` and it will fail the first
+two times you call it before starting to work normally.
+
+By default, `r/create` will create a retry that has a max of 3
+attempts and a waiting period of 500ms between calls. You can now
+create a decorated version of your `hello-world` function above and
+the `retry` above like this:
 
 ``` clojure
-(limited-hello) ;; => "Hello World!" (after 250ms)
+(def protected (r/decorate hello-world retry))
 ```
 
-The default configuration of the limiter is to wait 1000ms (1s) that's
-why nothing really exceptional happened. If you were to redefined
-`slow-hello` to take 1500ms though:
+When you call `protected` it will be successful but take around a full
+1000ms to run. That's because retry will wait 500ms between calls and
+we know `hello-world` fails twice:
 
 ``` clojure
-(defn slow-hello []
-  (Thread/sleep 1500)
-  "Hello World!")
-```
-
-Then calling `limited-hello` (after also redefining it) would yield an
-exception:
-
-``` clojure
-(limited-hello) ;; => throws ExceptionInfo
+(time (protected "John"))
+"Elapsed time: 1002.160511 msecs"
+Hello John!
 ```
 
 ## Retry Settings
 
-TBD: :max-attempts :wait-duration :interval-function
+When creating a retry, you can fine tune three of its settings:
 
-TBD: plus interval-functions namespace 
+1. `:max-attempts` - the amount of attempts it will try before giving
+   up. Default is `3`.
+2. `:wait-duration` - the duration in milliseconds between attempts.
+   Default is `500`.
+3. `:interval-function` - sometimes you need a more advanced strategy
+   between attempts. Some systems react better with a progressive
+   backoff for instance (you can start retrying faster but increasing
+   the waiting time in case the remote system is offline). For these
+   cases you can specify an interval function that will control this
+   waiting time. See below for more. Default here is a linear function
+   of `:wait-duration` intervals.
 
-When creating a time limiter, you can fine tune two of its settings:
-
-1. `:timeout-duration` - the timeout for this limiter in milliseconds
-   (i.e. 300). Default is 1000.
-2. `:cancel-running-future?` - when `true` the call to the decorated
-   function will be canceled in case of a timeout. If `false`, the
-   call will go through even in case of a timeout. However, in that
-   case, the caller will still get an exception thrown. Default is
-   `true`.
-   
-Changing `:cancel-running-future?` to `false` is particularly useful
-if you have an external call with a side effect that might be relevant
-later (i.e. updating a cache with external data - in that case you
-might prefer to fail the first time around if your time budget expires
-but still get the cache eventually updated when the external system
-returns).
-
-These two options can be sent to `create` as a map. In the following
-example, any function decorated with `limiter` will timeout in 300ms
-and calls will not be canceled if a timeout occurs.
+These three options can be sent to `create` as a map. In the following
+example, any function decorated with `retry` will be attempted for 10
+times with in 300ms intervals.
 
 ``` clojure
-(def limiter (create {:timeout-duration 300
-                      :cancel-running-future? false}))
+(def retry (create {:max-attempts 10
+                    :wait-duration 300}))
 ```
+
+Resilience4clj provides a series of commonly-used interval
+functions. They are all in the namespace
+`resilience4clj-retry.interval-functions`:
+
+* `of-default` - basic linear function with 500ms intervals
+* `of-millis` - linear function with a specified interval in
+  milliseconds
+* `of-randomized` - starts with an initial, specified interval in
+  milliseconds and then randomizes by an optional factor on subsequent
+  attempts
+* `of-exponential-backoff` - starts with an initial, specified
+  interval in milliseconds and then backs off by an optional
+  multiplier on subsequent calls (default multiplier is 1.5).
+* `of-exponential-random-backoff` - starts with an initial, specified
+  interval in milliseconds and then backs off by an optional
+  multiplier and randomizes by an optional factor on subsequent calls.
 
 ## Fallback Strategies
 
