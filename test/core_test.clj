@@ -15,7 +15,6 @@
         (throw (ex-info "Couldn't say hello"
                         {:extra-info :here}))))))
 
-
 (deftest create-default-retry
   (let [{:keys [max-attempts
                 interval-function]}
@@ -174,3 +173,25 @@
     (let [end (/ (double (- (. System (nanoTime)) start)) 1000000.0)]
       (is (> end (* target-end (- 1 error-margin))))
       (is (< end (* target-end (+ 1 error-margin)))))))
+
+(deftest fallback-function
+  (testing "non fallback option"
+    (let [my-retry (retry/create "MyService" {:max-attempts 1})
+          decorated (retry/decorate (create-hello-works-after 2) my-retry)]
+      (is (thrown? Throwable (decorated "World!")))
+      (try
+        (decorated "World!")
+        (catch Throwable e
+          (is (= :here
+                 (-> e ex-data :extra-info)))))))
+
+  (testing "with fallback option"
+    (let [fallback-fn (fn [n {:keys [cause]}]
+                        (str "It should say Hello " n " but it didn't "
+                             "because of a problem " (-> cause ex-data :extra-info name)))
+          my-retry (retry/create "MyService" {:max-attempts 1})
+          decorated (retry/decorate (create-hello-works-after 2)
+                                    my-retry
+                                    {:fallback fallback-fn})]
+      (is (= "It should say Hello World! but it didn't because of a problem here"
+             (decorated "World!"))))))

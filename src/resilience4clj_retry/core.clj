@@ -52,7 +52,7 @@
   (merge (base-event->data e)
          {:ellapsed-duration (-> e .getElapsedDuration .toNanos)}))
 
-;; informs that a call has been tried, failed and will now be retried
+;; informs that a call has been tried and succeeded
 (defmethod event->data :SUCCESS [e]
   (base-event->data e))
 
@@ -143,6 +143,9 @@
                                      :max-attempts 5}))
   (config retry2)
 
+  (defn always-fails []
+    (anomaly! :always-fails "Because I said so!"))
+
   ;; mock for an external call
   (defn external-call
     ([n]
@@ -162,6 +165,9 @@
         (< r 0.4) "I worked!!"
         :else (anomaly! :sorry "Sorry. No cake!"))))
   
+  (def protect-always-failure
+    (decorate always-fails
+              retry))
   
   (def call (decorate external-call
                       retry2
@@ -191,6 +197,4 @@
 
   (let [r (proxy [io.github.resilience4j.retry RetryConfig] []
             (new-method []
-              (println "Here")))])
-
-  )
+              (println "Here")))]))
