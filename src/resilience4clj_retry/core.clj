@@ -20,7 +20,7 @@
 (defn ^:private get-failure-handler [{:keys [fallback]}]
   (if fallback
     (fn [& args] (apply fallback args))
-    (fn [& args] (throw (-> args last :cause)))))
+    (fn [& args] (throw (-> args first :cause)))))
 
 ;; FIXME: manage retryOnException and/or retryOnResult (they are confusing in the docs)
 (defn ^:private config-data->retry-config
@@ -103,7 +103,7 @@
            result (Try/ofCallable decorated-callable)]
        (if (.isSuccess result)
          (.get result)
-         (let [args' (-> args vec (conj {:cause (.getCause result)}))]
+         (let [args' (-> args (conj {:cause (.getCause result)}))]
            (apply failure-handler args')))))))
 
 (defn metrics

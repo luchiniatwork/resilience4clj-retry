@@ -186,7 +186,7 @@
                  (-> e ex-data :extra-info)))))))
 
   (testing "with fallback option"
-    (let [fallback-fn (fn [n {:keys [cause]}]
+    (let [fallback-fn (fn [{:keys [cause]} n]
                         (str "It should say Hello " n " but it didn't "
                              "because of a problem " (-> cause ex-data :extra-info name)))
           my-retry (retry/create "MyService" {:max-attempts 1})
