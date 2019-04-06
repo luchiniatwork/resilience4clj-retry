@@ -4,7 +4,7 @@
             [clojure.test :refer :all]
             [clojure.string :as string]))
 
-;; mock factory for a failing an external call
+;; mock factory for a failing external call
 (defn ^:private create-hello-works-after
   [x]
   (let [a (atom x)]
@@ -195,3 +195,18 @@
                                     {:fallback fallback-fn})]
       (is (= "It should say Hello World! but it didn't because of a problem here"
              (decorated "World!"))))))
+
+(deftest effect-function
+  (let [param-ok? (atom false)
+        ret-ok? (atom false)
+        effect-fn (fn [ret n]
+                    (reset! ret-ok? (boolean (= "Hello World!" ret)))
+                    (reset! param-ok? (boolean (= "World" n))))
+        my-retry (retry/create "MyService" {:max-attempts 2})
+        decorated (retry/decorate (create-hello-works-after 1)
+                                  my-retry
+                                  {:effect effect-fn})]
+    (decorated "World")
+    (Thread/sleep 100)
+    (is (= @ret-ok? true))
+    (is (= @param-ok? true))))

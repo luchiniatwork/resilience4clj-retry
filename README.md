@@ -1,5 +1,6 @@
 [about]: https://github.com/luchiniatwork/resilience4clj-circuitbreaker/blob/master/docs/ABOUT.md
 [breaker]: https://github.com/luchiniatwork/resilience4clj-circuitbreaker/
+[cache-effect]: https://github.com/luchiniatwork/resilience4clj-cache#using-as-an-effect
 [circleci-badge]: https://circleci.com/gh/luchiniatwork/resilience4clj-retry.svg?style=shield&circle-token=10db5b67206f6a8351da2e10a783b9667a68b8ac
 [circleci]: https://circleci.com/gh/luchiniatwork/resilience4clj-retry
 [clojars-badge]: https://img.shields.io/clojars/v/resilience4clj/resilience4clj-retry.svg
@@ -34,6 +35,7 @@ in several different ways.
 * [Getting Started](#getting-started)
 * [Retry Settings](#retry-settings)
 * [Fallback Strategies](#fallback-strategies)
+* [Effects](#effects)
 * [Metrics](#metrics)
 * [Events](#events)
 * [Exception Handling](#exception-handling)
@@ -216,6 +218,44 @@ strategies:
    same parameters could be sent back).
 3. **Advanced**: multiple strategies can also be combined in order to
    create even better fallback strategies.
+
+For more details on some of these strategies, read the section
+[Effects](#effects) below.
+
+## Effects
+
+A common issue for some fallback strategies is to rely on a cache or
+other content source (see Content Fallback above). In these cases, it
+is good practice to persist the successful output of the function call
+as a side-effect of the call itself.
+
+Resilience4clj retry supports this behavior in the folling way:
+
+``` clojure
+(def retry (r/create "hello-service-retry"))
+
+(defn hello [person]
+  ;; hypothetical flaky, external HTTP request
+  (str "Hello " person))
+
+(def retry-hello
+  (r/decorate hello
+              {:effect (fn [ret person]
+                         ;; ret will have the successful return from `hello`
+                         ;; you can save it on a memory cache, disk, etc
+                         )}))
+```
+
+The signature of the effect function is the same as the original
+function plus a "return" argument as the first argument (`ret` on the
+example above). This argument is the successful return of the
+encapsulated function.
+
+The effect function is called on a separate thread so it is
+non-blocking.
+
+You can see an example of how to use effects for caching purposes at
+[using Resilience4clj cache as an effect][cache-effect].
 
 ## Metrics
 

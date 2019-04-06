@@ -95,14 +95,17 @@
 (defn decorate
   ([f retry]
    (decorate f retry nil))
-  ([f retry opts]
+  ([f retry {:keys [effect] :as opts}]
    (fn [& args]
      (let [callable (reify Callable (call [_] (apply f args)))
            decorated-callable (Retry/decorateCallable retry callable)
            failure-handler (get-failure-handler opts)
            result (Try/ofCallable decorated-callable)]
        (if (.isSuccess result)
-         (.get result)
+         (let [out (.get result)]
+           (when effect
+             (future (apply effect (conj args out))))
+           out)
          (let [args' (-> args (conj {:cause (.getCause result)}))]
            (apply failure-handler args')))))))
 
