@@ -49,14 +49,14 @@ Add `resilience4clj/resilience4clj-retry` as a dependency to your
 `deps.edn` file:
 
 ``` clojure
-resilience4clj/resilience4clj-retry {:mvn/version "0.1.0"}
+resilience4clj/resilience4clj-retry {:mvn/version "0.1.1"}
 ```
 
 If you are using `lein` instead, add it as a dependency to your
 `project.clj` file:
 
 ``` clojure
-[resilience4clj/resilience4clj-retry "0.1.0"]
+[resilience4clj/resilience4clj-retry "0.1.1"]
 ```
 
 Require the library:
