@@ -1,9 +1,19 @@
 (ns resilience4clj-retry.core
   (:import
    (io.github.resilience4j.retry RetryConfig
-                                 Retry)
+                                 Retry
+                                 Retry$EventPublisher)
+
+   (io.github.resilience4j.retry.event RetryEvent
+                                       RetryOnErrorEvent
+                                       RetryOnRetryEvent
+                                       RetryOnIgnoredErrorEvent
+                                       RetryOnSuccessEvent)
+
    (io.github.resilience4j.core EventConsumer)
+
    (io.vavr.control Try)
+
    (java.time Duration)))
 
 (defn ^:private anom-map
@@ -33,39 +43,35 @@
 
 ;; FIXME: retry config does not expose wait duration directly - this feels wrong
 (defn ^:private retry-config->config-data
-  [retry-config]
+  [^RetryConfig retry-config]
   {:max-attempts      (.getMaxAttempts retry-config)
    :interval-function (.getIntervalFunction retry-config)})
 
 (defmulti ^:private event->data
-  (fn [e]
+  (fn [^RetryEvent e]
     (-> e .getEventType .toString keyword)))
 
-(defn ^:private base-event->data [e]
+(defn ^:private base-event->data [^RetryEvent e]
   {:event-type (-> e .getEventType .toString keyword)
    :retry-name (.getName e)
    :number-of-retry-attempts (.getNumberOfRetryAttempts e)
    :creation-time (.getCreationTime e)
    :last-throwable (.getLastThrowable e)})
 
-(defn ^:private ellapsed-event->data [e]
-  (merge (base-event->data e)
-         {:ellapsed-duration (-> e .getElapsedDuration .toNanos)}))
-
 ;; informs that a call has been tried and succeeded
-(defmethod event->data :SUCCESS [e]
+(defmethod event->data :SUCCESS [^RetryOnSuccessEvent e]
   (base-event->data e))
 
 ;; informs that a call has been retried, but still failed
-(defmethod event->data :ERROR [e]
+(defmethod event->data :ERROR [^RetryOnErrorEvent e]
   (base-event->data e))
 
 ;; informs that a call has been tried, failed and will now be retried
-(defmethod event->data :RETRY [e]
+(defmethod event->data :RETRY [^RetryOnRetryEvent e]
   (base-event->data e))
 
 ;; informs that an error has been ignored
-(defmethod event->data :IGNORED_ERROR [e]
+(defmethod event->data :IGNORED_ERROR [^RetryOnIgnoredErrorEvent e]
   (base-event->data e))
 
 (defn ^:private event-consumer [f]
@@ -83,19 +89,19 @@
    (create n nil))
   ([n opts]
    (if opts
-     (Retry/of n (config-data->retry-config opts))
-     (Retry/ofDefaults n))))
+     (Retry/of ^String n ^RetryConfig (config-data->retry-config opts))
+     (Retry/ofDefaults ^String n))))
 
 (defn config
-  [retry]
+  [^Retry retry]
   (-> retry
       .getRetryConfig
       retry-config->config-data))
 
 (defn decorate
-  ([f retry]
+  ([f ^Retry retry]
    (decorate f retry nil))
-  ([f retry {:keys [effect] :as opts}]
+  ([f ^Retry retry {:keys [effect] :as opts}]
    (fn [& args]
      (let [callable (reify Callable (call [_] (apply f args)))
            decorated-callable (Retry/decorateCallable retry callable)
@@ -110,7 +116,7 @@
            (apply failure-handler args')))))))
 
 (defn metrics
-  [retry]
+  [^Retry retry]
   (let [metrics (.getMetrics retry)]
     {;; the number of successful calls without a retry attempt
      :number-of-successful-calls-without-retry-attempt
@@ -129,9 +135,9 @@
      (.getNumberOfFailedCallsWithRetryAttempt metrics)}))
 
 (defn listen-event
-  [retry event-key f]
-  (let [event-publisher (.getEventPublisher retry)
-        consumer (event-consumer f)]
+  [^Retry retry event-key f]
+  (let [^Retry$EventPublisher event-publisher (.getEventPublisher retry)
+        ^EventConsumer consumer (event-consumer f)]
     (case event-key
       :SUCCESS (.onSuccess event-publisher consumer)
       :ERROR (.onError event-publisher consumer)
