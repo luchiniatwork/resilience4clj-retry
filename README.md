@@ -142,7 +142,7 @@ example, any function decorated with `retry` will be attempted for 10
 times with in 300ms intervals.
 
 ``` clojure
-(def retry (create {:max-attempts 10
+(def retry (r/create {:max-attempts 10
                     :wait-duration 300}))
 ```
 
@@ -162,6 +162,19 @@ functions. They are all in the namespace
 * `of-exponential-random-backoff` - starts with an initial, specified
   interval in milliseconds and then backs off by an optional
   multiplier and randomizes by an optional factor on subsequent calls.
+
+The function `config` returns the configuration of a retry in case
+you need to inspect it. Example:
+
+``` clojure
+(r/config retry)
+=> {:max-attempts 3
+    :interval-function #object[io.github.resilience4j.retry.IntervalFunction$$Lambda$43/0x0000000100a1e440 0x2868e1a4 "io.github.resilience4j.retry.IntervalFunction$$Lambda$43/0x0000000100a1e440@2868e1a4"}
+```
+
+Unfortunately the underlying implemention of interval function is a
+bit obfuscated as of now so you only see the reference to the object
+implementing it.
 
 ## Fallback Strategies
 
