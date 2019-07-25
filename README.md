@@ -1,11 +1,11 @@
-[about]: https://github.com/luchiniatwork/resilience4clj-circuitbreaker/blob/master/docs/ABOUT.md
-[breaker]: https://github.com/luchiniatwork/resilience4clj-circuitbreaker/
-[cache-effect]: https://github.com/luchiniatwork/resilience4clj-cache#using-as-an-effect
-[circleci-badge]: https://circleci.com/gh/luchiniatwork/resilience4clj-retry.svg?style=shield&circle-token=10db5b67206f6a8351da2e10a783b9667a68b8ac
-[circleci]: https://circleci.com/gh/luchiniatwork/resilience4clj-retry
+[about]: https://github.com/resilience4clj/resilience4clj-circuitbreaker/blob/master/docs/ABOUT.md
+[breaker]: https://github.com/resilience4clj/resilience4clj-circuitbreaker/
+[cache-effect]: https://github.com/resilience4clj/resilience4clj-cache#using-as-an-effect
+[circleci-badge]: https://circleci.com/gh/resilience4clj/resilience4clj-retry.svg?style=shield&circle-token=10db5b67206f6a8351da2e10a783b9667a68b8ac
+[circleci]: https://circleci.com/gh/resilience4clj/resilience4clj-retry
 [clojars-badge]: https://img.shields.io/clojars/v/resilience4clj/resilience4clj-retry.svg
 [clojars]: http://clojars.org/resilience4clj/resilience4clj-retry
-[github-issues]: https://github.com/luchiniatwork/resilience4clj-retry/issues
+[github-issues]: https://github.com/resilience4clj/resilience4clj-retry/issues
 [license-badge]: https://img.shields.io/badge/license-MIT-blue.svg
 [license]: ./LICENSE
 [status-badge]: https://img.shields.io/badge/project%20status-alpha-brightgreen.svg
