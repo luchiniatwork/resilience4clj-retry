@@ -242,7 +242,7 @@ other content source (see Content Fallback above). In these cases, it
 is good practice to persist the successful output of the function call
 as a side-effect of the call itself.
 
-Resilience4clj retry supports this behavior in the folling way:
+Resilience4clj retry supports this behavior like so:
 
 ``` clojure
 (def retry (r/create "hello-service-retry"))
