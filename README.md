@@ -218,7 +218,7 @@ When considering fallback strategies there are usually three major
 strategies:
 
 1. **Failure**: the default way for Resilience4clj - just let the
-   exceptiohn flow - is called a "Fail Fast" approach (the call will
+   exception flow - is called a "Fail Fast" approach (the call will
    fail fast once the breaker is open). Another approach is "Fail
    Silently". In this approach the fallback function would simply hide
    the exception from the consumer (something that can also be done
