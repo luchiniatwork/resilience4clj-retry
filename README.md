@@ -172,7 +172,7 @@ you need to inspect it. Example:
     :interval-function #object[io.github.resilience4j.retry.IntervalFunction$$Lambda$43/0x0000000100a1e440 0x2868e1a4 "io.github.resilience4j.retry.IntervalFunction$$Lambda$43/0x0000000100a1e440@2868e1a4"}
 ```
 
-Unfortunately the underlying implemention of interval function is a
+Unfortunately the underlying implementation of interval function is a
 bit obfuscated as of now so you only see the reference to the object
 implementing it.
 
@@ -218,7 +218,7 @@ When considering fallback strategies there are usually three major
 strategies:
 
 1. **Failure**: the default way for Resilience4clj - just let the
-   exceptiohn flow - is called a "Fail Fast" approach (the call will
+   exception flow - is called a "Fail Fast" approach (the call will
    fail fast once the breaker is open). Another approach is "Fail
    Silently". In this approach the fallback function would simply hide
    the exception from the consumer (something that can also be done
@@ -226,7 +226,7 @@ strategies:
 2. **Content Fallback**: some of the examples of content fallback are
    returning "static content" (where a failure would always yield the
    same static content), "stubbed content" (where a failure would
-   yield some kind of related content based on the paramaters of the
+   yield some kind of related content based on the parameters of the
    call), or "cached" (where a cached copy of a previous call with the
    same parameters could be sent back).
 3. **Advanced**: multiple strategies can also be combined in order to
@@ -242,7 +242,7 @@ other content source (see Content Fallback above). In these cases, it
 is good practice to persist the successful output of the function call
 as a side-effect of the call itself.
 
-Resilience4clj retry supports this behavior in the folling way:
+Resilience4clj retry supports this behavior in the following way:
 
 ``` clojure
 (def retry (r/create "hello-service-retry"))
