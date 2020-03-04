@@ -142,8 +142,8 @@ example, any function decorated with `retry` will be attempted for 10
 times with in 300ms intervals.
 
 ``` clojure
-(def retry (r/create {:max-attempts 10
-                    :wait-duration 300}))
+(def retry (r/create "name" {:max-attempts 10
+                             :wait-duration 300}))
 ```
 
 Resilience4clj provides a series of commonly-used interval
