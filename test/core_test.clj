@@ -24,7 +24,7 @@
     (is (= 3 max-attempts))
     (is (string/starts-with?
          (str (type interval-function))
-         "class io.github.resilience4j.retry.IntervalFunction$$Lambda"))))
+         "class io.github.resilience4j.core.IntervalFunction$$Lambda"))))
 
 (deftest create-custom-retry
   (let [{:keys [max-attempts
@@ -35,7 +35,7 @@
     (is (= 3 max-attempts))
     (is (string/starts-with?
          (str (type interval-function))
-         "class io.github.resilience4j.retry.IntervalFunction$$Lambda"))))
+         "class io.github.resilience4j.core.IntervalFunction$$Lambda"))))
 
 (deftest works-after-3-tries-2-failures
   (let [protected (retry/decorate (create-hello-works-after 2)
