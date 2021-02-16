@@ -1,6 +1,6 @@
 (ns resilience4clj-retry.interval-functions
   (:import
-   (io.github.resilience4j.retry IntervalFunction)))
+   (io.github.resilience4j.core IntervalFunction)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;Public functions
